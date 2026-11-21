@@ -1,0 +1,75 @@
+{
+  "name": "agent-device-vphone",
+  "version": "0.1.0-dev",
+  "type": "module",
+  "description": "Attach-only vphone iOS provider plugin for agent-device.",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown --config tsdown.config.ts",
+    "test": "vitest run src",
+    "test:package": "node scripts/check-provider-plugin.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "prepack": "pnpm build"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./agent-device": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "devDependencies": {
+    "@agent-device/capture-kit": "link:../agent-device-vphone-outtree-core/packages/capture-kit",
+    "@agent-device/contracts": "link:../agent-device-vphone-outtree-core/packages/contracts",
+    "@agent-device/kernel": "link:../agent-device-vphone-outtree-core/packages/kernel",
+    "@agent-device/test-kit": "link:../agent-device-vphone-outtree-core/packages/test-kit",
+    "@types/node": "^22.20.1",
+    "@types/pngjs": "^6.0.5",
+    "agent-device": "link:../agent-device-vphone-outtree-core",
+    "pngjs": "^7.0.0",
+    "tsdown": "^0.22.14",
+    "typescript": "^7.0.2",
+    "vitest": "5.0.4"
+  },
+  "agentDevicePlugin": {
+    "apiVersion": 2,
+    "provider": "vphone",
+    "entry": "./dist/agent-device.mjs",
+    "connection": {
+      "leaseKind": "direct-device-provider",
+      "requiresAppAttachment": false,
+      "requiresRemoteDaemon": false,
+      "supportsArtifacts": false,
+      "supportsDeferredAppSelection": false,
+      "supportsDirectPortReverse": false,
+      "usesCloudWebDriverLease": false
+    },
+    "credentialVariables": []
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./dist/agent-device.mjs"
+      },
+      "./agent-device": {
+        "import": "./dist/agent-device.mjs"
+      }
+    },
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "packageManager": "pnpm@11.17.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bytemain/agent-device-vphone.git"
+  }
+}
