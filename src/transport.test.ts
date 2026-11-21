@@ -59,22 +59,24 @@ test('RPC returns the result and applies bounded exec options', async () => {
   assert.equal(options.maxBuffer, 4567);
 });
 
-test('RPC refusal preserves its typed guest code and sanitizes diagnostics', async () => {
-  stubProcess(
-    result(
-      JSON.stringify({
-        ok: false,
-        guest_error: { code: 'invalid_param', message: 'bad token=secret password="hidden"' },
-      }),
-      { error: new Error('exit 1') },
-    ),
-  );
+test('RPC refusal parses the real stderr shape and sanitizes diagnostics', async () => {
+  stubProcess({
+    stdout: '',
+    stderr:
+      'error: The machine refused the request. Try again.\n' +
+      '{"code":"invalid_param","message":"bad token=secret password=\\"hidden\\""}\n',
+    error: new Error('exit 1'),
+  });
   const transport = createVphoneTransport();
 
   await assert.rejects(
     transport.rpc('machine-a', 'input.type', { text: 'do-not-echo' }),
     (error: unknown) => {
       assert.equal((error as { code?: string }).code, 'COMMAND_FAILED');
+      assert.equal(
+        (error as { details?: { reason?: string } }).details?.reason,
+        'vphone_rpc_refused',
+      );
       assert.equal(
         (error as { details?: { vphoneCode?: string } }).details?.vphoneCode,
         'invalid_param',

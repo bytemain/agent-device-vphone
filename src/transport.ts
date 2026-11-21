@@ -77,7 +77,11 @@ export function createVphoneTransport(options: VphoneTransportOptions = {}): Vph
     rpc: async (machine, method, params = {}, call) => {
       const completed = await run(['guest', 'rpc', machine, method, JSON.stringify(params)], call);
       if (completed.error !== undefined && !completed.stdout.trim()) {
-        throw processFailure(call?.signal, completed.error, `vphone ${method}`, completed.stderr);
+        const refusal = rpcRefusalFromStderr(completed.stderr, method);
+        throw (
+          refusal ??
+          processFailure(call?.signal, completed.error, `vphone ${method}`, completed.stderr)
+        );
       }
       const result = parseRpcEnvelope(completed.stdout, method);
       if (completed.error !== undefined) {
@@ -139,6 +143,23 @@ function parseRpcEnvelope(stdout: string, method: string): unknown {
     }
     return envelope.result;
   }
+  throw rpcRefusal(envelope, method);
+}
+
+function rpcRefusalFromStderr(stderr: string, method: string): AppError | undefined {
+  const line = stderr.trim().split('\n').at(-1);
+  if (!line) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(line);
+  } catch {
+    return undefined;
+  }
+  if (!isRecord(parsed)) return undefined;
+  return rpcRefusal(parsed.ok === false ? parsed : { ok: false, guest_error: parsed }, method);
+}
+
+function rpcRefusal(envelope: Record<string, unknown>, method: string): AppError {
   const guest = isRecord(envelope.guest_error)
     ? envelope.guest_error
     : isRecord(envelope.error)
@@ -150,7 +171,7 @@ function parseRpcEnvelope(stdout: string, method: string): unknown {
     (typeof envelope.error === 'string' ? envelope.error : undefined) ??
     envelope.message;
   const message = redactDiagnosticData(typeof detail === 'string' ? detail : 'request refused');
-  throw new AppError('COMMAND_FAILED', `vphone ${method} failed [${code}]: ${message}`, {
+  return new AppError('COMMAND_FAILED', `vphone ${method} failed [${code}]: ${message}`, {
     reason: VPHONE_ERROR_REASONS.rpcRefused,
     vphoneCode: code,
   });

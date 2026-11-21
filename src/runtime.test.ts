@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import type { DeviceLease } from '@agent-device/contracts/device';
 import type { PlatformRuntimeHost } from '@agent-device/contracts/platform-runtime-operations';
+import type { PlatformRequestScope } from '@agent-device/contracts/platform-runtime-host';
 import { test } from 'vitest';
 import { createVphoneRuntime } from './runtime.ts';
 import { createRecordingVphoneTransport } from './transport.fixtures.ts';
@@ -101,6 +102,7 @@ test('platform facts admit only the first-slice operations', async () => {
     'scrollDirection',
     'openApplication',
     'closeApplication',
+    'ensureReady',
   ] as const) {
     assert.equal(facts.operations[operation].available, true, operation);
   }
@@ -119,6 +121,7 @@ test('platform facts admit only the first-slice operations', async () => {
     'shutdownTarget',
     'screenRecordingStart',
     'deployApp',
+    'bootTarget',
   ] as const) {
     assert.equal(facts.operations[operation].available, false, operation);
     assert.equal(
@@ -126,4 +129,29 @@ test('platform facts admit only the first-slice operations', async () => {
       'unsupported-provider-mode',
     );
   }
+});
+
+test('boot has no dispatch and ensureReady probes the running guest', async () => {
+  const fixture = createRecordingVphoneTransport();
+  const registration = createVphoneRuntime({}, fixture.transport);
+  const allocated = await registration.runtime.leaseLifecycle.allocate!(lease(), {
+    flags: { device: 'machine-a' },
+  });
+  const device = allocated?.device as Parameters<typeof registration.runtime.ownsDevice>[0];
+  const owner = await registration.platformModule.loadRuntime({
+    snapshot: { presentIosAcquisition: () => undefined },
+  } as unknown as PlatformRuntimeHost);
+  const binding = await owner.bind({
+    device,
+    intent: { kind: 'ordinary' },
+    scope: { signal: new AbortController().signal } as PlatformRequestScope,
+  });
+
+  assert.equal(binding.operations.bootTarget, undefined);
+  assert.equal(binding.facts.operations.bootTarget.available, false);
+  fixture.calls.length = 0;
+  await binding.operations.ensureReady!({});
+  assert.deepEqual(fixture.calls, [
+    { kind: 'rpc', machine: 'machine-a', method: 'device.info', params: {} },
+  ]);
 });

@@ -112,7 +112,7 @@ function factsFor(
       }),
       ...scrollRuntimeOperationFacts({ scroll: available }),
       ensureReady: available,
-      bootTarget: available,
+      bootTarget: unsupported,
       ...applicationLifecycleOperationFacts({
         resolveOpenTarget: available,
         prepareApplicationOpen: available,
@@ -197,8 +197,10 @@ function bindVphone(
     binding: bindProviderApplicationLifecycleInteractor({ device, signal, resolveInteractor }),
   });
   const operations = {
-    ensureReady: async () => ({ ...device, booted: true as const }),
-    bootTarget: async () => ({ ...device, booted: true as const }),
+    ensureReady: async () => {
+      await resolveInteractor({ signal })?.openDevice();
+      return { ...device, booted: true as const };
+    },
     ...availableApplicationLifecycleOperations(lifecycle, facts.operations),
     ...bindProviderSnapshotInteractor({
       device,
