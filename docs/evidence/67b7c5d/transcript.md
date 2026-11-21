@@ -3,8 +3,8 @@
 ## Source and scope
 
 - Provider source used for the packed tgz: `67b7c5dd4f2888ea6619302efcb91d2d66d1a89c`.
-- Public PR code is rebased to `521ad4876fd33dd4b2fe34ea4673faf24df84283`; `git diff 67b7c5d 521ad48 -- . ':(exclude)docs'` is empty, and typecheck/build/57 tests/packed smoke were rerun there. Later commits add only this public evidence.
-- Core used for the daemon: `cd095e98812aa4a82305b703feceff35b98e732f` (`jony/vphone-snapshot-producer-open`).
+- Public PR code was first rebased to `521ad4876fd33dd4b2fe34ea4673faf24df84283`; `git diff 67b7c5d 521ad48 -- . ':(exclude)docs'` is empty. Current code `b0e38ab6ebd788e40eed3a921ed68cecacc94215` only replaces the removed helper with the same branded type annotation. Typecheck/build/57 tests/packed smoke were rerun on both public versions.
+- Core used for the live daemon: `cd095e98812aa4a82305b703feceff35b98e732f`. Current core `37c32f3d29e5479ba5d4187c0defe8e87190b6d1` only removes that helper; the producer and fallback behavior are unchanged.
 - Packed provider SHA-256: `f2c2f7a857074dd77968585f7b4019cb5f0447f4981df0b2fbc3fc5ddca58e72`.
 - Existing machine: `raft-iphone`, UDID `0000FE01-C81F87A0E2C694D8`, iOS 27.0.1, vphone bundle 2.17.1, running on the same Apple Silicon Mac as the daemon.
 - No VM was created, booted, stopped, or deleted. No app or system setting was saved. No npm package was published and no Testbed path was changed.

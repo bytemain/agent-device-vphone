@@ -1,7 +1,7 @@
 import { createIosSnapshotAcquisition } from '@agent-device/capture-kit/ios-snapshot-acquisition';
 import { interpretIosNode } from '@agent-device/capture-kit/ios-node-interpretation';
 import type { SnapshotRuntimeAcquiredResult } from '@agent-device/contracts/interactor-types';
-import { thirdPartySnapshotProducer } from '@agent-device/contracts/snapshot-producers';
+import type { ThirdPartySnapshotProducer } from '@agent-device/contracts/snapshot-producers';
 import { AppError } from '@agent-device/kernel/errors';
 import type { RawSnapshotNode, Rect } from '@agent-device/kernel/snapshot';
 import { VPHONE_ERROR_REASONS } from './reasons.ts';
@@ -41,7 +41,7 @@ export async function captureVphoneSnapshot(
     interpretIosNode(mapVphoneNode(node, index, before.bundleId)),
   );
   return createIosSnapshotAcquisition({
-    producer: thirdPartySnapshotProducer('vphone-ios-tree'),
+    producer: 'vphone-ios-tree' as ThirdPartySnapshotProducer,
     nodes,
     viewport: { kind: 'reported', rect: readVphoneScreen(screen) },
     lineage: { targetId },
