@@ -11,6 +11,7 @@ import {
   bindProviderFocusInteractor,
   focusRuntimeOperationFacts,
 } from '@agent-device/contracts/focus-runtime';
+import { providerInteractorSource } from '@agent-device/contracts/interactor-operation-binding';
 import type {
   PlatformRuntimeHost,
   PlatformRuntimeOperations,
@@ -196,9 +197,15 @@ function bindVphone(
     closeBeforeRelaunch: false,
     binding: bindProviderApplicationLifecycleInteractor({ device, signal, resolveInteractor }),
   });
+  const readinessInteractor = providerInteractorSource({
+    device,
+    operation: 'readiness',
+    resolveInteractor,
+  });
   const operations = {
     ensureReady: async () => {
-      await resolveInteractor({ signal })?.openDevice();
+      const interactor = await readinessInteractor({ signal });
+      await interactor.openDevice();
       return { ...device, booted: true as const };
     },
     ...availableApplicationLifecycleOperations(lifecycle, facts.operations),

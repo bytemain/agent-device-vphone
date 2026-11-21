@@ -154,4 +154,10 @@ test('boot has no dispatch and ensureReady probes the running guest', async () =
   assert.deepEqual(fixture.calls, [
     { kind: 'rpc', machine: 'machine-a', method: 'device.info', params: {} },
   ]);
+
+  await registration.runtime.leaseLifecycle.release!(lease());
+  await assert.rejects(binding.operations.ensureReady!({}), {
+    code: 'UNSUPPORTED_OPERATION',
+    details: { reason: 'provider-runtime-interactor-missing', deviceId: device.id },
+  });
 });
